@@ -193,7 +193,18 @@ VectorXf QuadEstimatorEKF::PredictState(VectorXf curState, float dt, V3F accel, 
   Quaternion<float> attitude = Quaternion<float>::FromEuler123_RPY(rollEst, pitchEst, curState(6));
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  // Update predicted x,y,z using simple linear integration
+  predictedState(0) = curState(0) + dt * curState(3);
+  predictedState(1) = curState(1) + dt * curState(4);
+  predictedState(2) = curState(2) + dt * curState(5);
 
+  // rotate accel from bodyframe to inertial fram
+  accel = attitude.Rotate_BtoI(accel); // Let's reuse accel
+
+// update predicted vx,vy,vz
+  predictedState(3) = curState(3) + dt * accel.x;
+  predictedState(4) = curState(4) + dt * accel.y;
+  predictedState(5) = curState(5) + dt * (accel.z - CONST_GRAVITY);
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
