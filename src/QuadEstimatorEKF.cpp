@@ -232,6 +232,14 @@ MatrixXf QuadEstimatorEKF::GetRbgPrime(float roll, float pitch, float yaw)
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
+  // 1st row
+  RbgPrime(0, 0) = -cos(pitch) * sin(yaw);
+  RbgPrime(0, 1) = -sin(roll)  * sin(pitch) * sin(yaw) - cos(pitch) * cos(yaw);
+  RbgPrime(0, 2) = -cos(roll)  * sin(pitch) * sin(yaw) + sin(roll)   * cos(yaw);
+  // 2nd row
+  RbgPrime(1, 0) = cos(pitch) * cos(yaw);
+  RbgPrime(1, 1) = sin(roll)  * sin(pitch) * cos(yaw) - cos(roll) * sin(yaw);
+  RbgPrime(1, 2) = cos(roll) * sin(pitch) * cos(yaw) + sin(roll) * sin(yaw);
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
@@ -277,7 +285,22 @@ void QuadEstimatorEKF::Predict(float dt, V3F accel, V3F gyro)
   gPrime.setIdentity();
 
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+  // create helper matrices
+  V3F rPBG[3];
+  for (int i = 0; i<3; i++) {
+	  rPBG[i] = V3F(RbgPrime(i, 0), RbgPrime(i, 1), RbgPrime(i, 2));
+  }
 
+  // fill up gPrime matrix
+  gPrime(0, 3) = dt;
+  gPrime(1, 4) = dt;
+  gPrime(2, 5) = dt;
+  gPrime(3, 6) = (rPBG[0] * accel).sum() * dt;
+  gPrime(4, 6) = (rPBG[1] * accel).sum() * dt;
+  gPrime(5, 6) = (rPBG[2] * accel).sum() * dt;
+
+  // update cov
+  ekfCov = gPrime * ekfCov * gPrime.transpose() + Q;
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
 
